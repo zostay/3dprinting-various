@@ -11,13 +11,13 @@ module cut_outs() {
 
 difference() {
     union() {
-        cylinder(h=4, d=150, center=True);
+        cylinder(h=4, d=150);
         translate([0,0,4])
             cylinder(h=18, d1=150, d2=90, center=True);
     }
     
     translate([0, 0, 4])
-        cylinder(h=20, d=74, center=True);
+        cylinder(h=20, d=74);
 
     translate([-82,0,0]) cut_outs();
 }
