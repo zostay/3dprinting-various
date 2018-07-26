@@ -28,7 +28,7 @@ sub pixels() {
         state $y = 0;
 
         given $c {
-            when "\n" { $x = 0; $y++; next }
+            when "\n" { $x = 0; $y--; next }
             when "." { #`(ignore) }
             default { take ($x, $y, %heights{$_}) }
         }
