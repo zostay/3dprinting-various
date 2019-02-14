@@ -1,4 +1,4 @@
-type="cylinder"; // "bundle" OR "cylinder" OR "block"
+type="block"; // "bundle" OR "cylinder" OR "block"
 
 bundle_width_count=4;
 bundle_length_count=1;
@@ -47,11 +47,11 @@ function battbox_dimension(sizing, count) =
 battbox_width_w_bundle=battbox_dimension(bundle_width, battbox_count_wide);
 battbox_length_w_bundle=battbox_dimension(bundle_length,battbox_count_long);
 
-battbox_width_w_cylinder=battbox_dimension(battery_diameter,battbox_count_wide);
-battbox_length_w_cylinder=battbox_dimension(battery_diameter,battbox_count_long);
+battbox_width_w_cylinder=battbox_dimension(battery_diameter+battery_clearance,battbox_count_wide);
+battbox_length_w_cylinder=battbox_dimension(battery_diameter+battery_clearance,battbox_count_long);
 
-battbox_width_w_block=battbox_dimension(battery_width,battbox_count_wide);
-battbox_length_w_block=battbox_dimension(battery_length,battbox_count_long);
+battbox_width_w_block=battbox_dimension(battery_width+battery_clearance,battbox_count_wide);
+battbox_length_w_block=battbox_dimension(battery_length+battery_clearance,battbox_count_long);
 
 function battbox_width() =
     type == "bundle"   ? battbox_width_w_bundle   :
@@ -63,6 +63,10 @@ function battbox_length() =
  /* type == "block" */   battbox_length_w_block;
 
 battery_cut_height=battbox_height*2;
+battbox_inset_height=battbox_height*1/3;
+
+battbox_inset_width=battbox_width() - battbox_edge_width*2;
+battbox_inset_length=battbox_length() - battbox_edge_width*2;
 
 function joint_count() =
     min(joint_max,floor((battbox_length() - joint_offset*2) / joint_spacing)+1);
@@ -94,6 +98,35 @@ module joint_tabs() {
 module joint_sockets() {
     translate([0,joint_offset,0])
     joints(joint_v_clearance, joint_d_clearance);
+}
+
+module battbox_inset_cutout() {
+    if (type == "bundle" || type == "cylinder") {
+        translate([0,0,battbox_base_thickness+battbox_inset_height])
+        union() {
+            translate([battery_diameter/2,battery_diameter/2,0])
+            cylinder(battery_cut_height,d=battery_diameter+battery_clearance*2);
+            
+            translate([battbox_inset_width-battery_diameter/2,battery_diameter/2,0])
+            cylinder(battery_cut_height,d=battery_diameter+battery_clearance*2);
+            
+            translate([battery_diameter/2,battbox_inset_length-battery_diameter/2,0])
+            cylinder(battery_cut_height,d=battery_diameter+battery_clearance*2);
+            
+            translate([battbox_inset_width-battery_diameter/2,battbox_inset_length-battery_diameter/2,0])
+            cylinder(battery_cut_height,d=battery_diameter+battery_clearance*2);
+            
+            translate([0,battery_diameter/2,0])
+            cube([battbox_inset_width,battbox_inset_length-battery_diameter,battery_cut_height]);
+            
+            translate([battery_diameter/2,0,0])
+            cube([battbox_inset_width-battery_diameter,battbox_inset_length,battery_cut_height]);
+        }
+    }
+    else if (type == "block") {
+        translate([0,0,battbox_base_thickness+battbox_inset_height])
+        cube([battbox_inset_width,battbox_inset_length,battery_cut_height]);
+    }
 }
 
 module bundle_slot() {
@@ -154,6 +187,9 @@ module battery_box() {
         }
 
         joint_sockets();
+
+        translate([battbox_edge_width,battbox_edge_width,0])
+        battbox_inset_cutout();
     
         for (w = [1:battbox_count_wide]) {
             for(l = [1:battbox_count_long]) {
